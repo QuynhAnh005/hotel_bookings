@@ -1,0 +1,175 @@
+---
+title: "hotel_bookings" 
+author: "Quỳnh Anh"
+date: "2026-06-14"
+output: html_document
+---
+# 1. Nạp thư viện
+```{r}
+library(dplyr)    
+library(tidyr) 
+library(rio)
+```
+
+# 2. Đọc dữ liệu
+```{r}
+raw <- read.csv("hotel_bookings.csv", stringsAsFactors = FALSE)
+View(raw)
+
+# Cấu trúc
+glimpse(raw)
+```
++ Dữ liệu có 119,390 quan sát và 32 biến
++ Dữ liệu dạng giao dịch, mỗi dòng là 1 lần đặt phòng
+
+# 3. Chọn biến phân tích
+```{r}
+raw1 <- select(raw,
+               hotel,              
+               is_canceled, 
+               lead_time,                
+               deposit_type,            
+               market_segment,           
+               customer_type,            
+               is_repeated_guest,       
+               arrival_date_year,        
+               arrival_date_month,      
+               adr,     
+               stays_in_week_nights,     
+               stays_in_weekend_nights, 
+               country,                 
+               adults,                
+               children,                 
+               babies)
+str(raw1)
+```
++ Chọn ra 16 biến trên 32 biến
+
+# 4. Làm sạch dữ liệu
+## 4.1. Kiểm tra NA thực
+```{r}
+na_count <- colSums(is.na(raw1))
+na_count[na_count > 0]  
+```
++ Biến children có 4 giá trị khuyết thiếu
+
+```{r}
+# Thay NA bằng 0
+clean <- mutate(raw1, children = replace_na(children, 0))
+
+anyNA(clean)
+```
++ Vì chỉ có 4 giá trị khuyết thiếu trên hơn 119 nghìn quan sát ở biến children (<5% tổng quan sát), thay NA bằng 0
+
+## 4.2. Kiểm tra NULL dạng chuỗi
+```{r}
+null_count <- sapply(clean, function(x) sum(x == "NULL", na.rm = TRUE))
+null_count[null_count > 0]
+```
++ Biến country có 488 giá trị NULL
+
+```{r}
+# Thay NULL bằng Unknown
+clean$country[clean$country == "NULL"] <- "Unknown"
+
+sapply(clean, function(x) sum(x == "NULL", na.rm = TRUE))
+```
++ Thay NULL bằng Unknown để cải thiện trực quan hóa và báo cáo
++ Vì chỉ có 488 giá trị NULL trên hơn 119 nghìn quan sát ở biến country (<5% tổng quan sát), không xóa dòng
+
+```{r}
+# Kiểm tra chuỗi rỗng 
+sum(clean == "", na.rm = TRUE) ## Đếm toàn bộ
+sapply(clean, function(x) sum(x == "", na.rm = TRUE)) ## Đếm từng cột
+```
+
+## 4.3. Dữ liệu bất hợp lý
+```{r}
+# Đặt phòng với 0 khách (adults + children + babies = 0) => Vô nghĩa
+clean %>%
+  filter(adults + children + babies == 0) %>%
+  nrow()
+```
++ Có 180 quan sát có tổng khách bằng 0
+
+```{r}
+# Lọc những quan sát có tổng khách > 0
+clean <- clean %>%
+  filter(adults + children + babies > 0) 
+  
+nrow(clean)
+```
++ Dữ liệu còn lại 119,210 quan sát
+
+## 4.4. Kiểm tra biến adr
+```{r}
+# Tổng quan
+summary(clean$adr)
+```
++ Có giá trị âm trong biến adr, không thể âm vì đây là giá phòng trung bình hàng ngày
++ Gía trị lớn nhất 5400 lớn hơn rất nhiều so với trung vị => Nghi ngờ là outlier
+
+```{r}
+# Loại bỏ adr âm 
+clean <- filter(clean, adr >= 0)
+sum(clean$adr < 0)
+```
+
+```{r}
+# Kiểm tra giá trị đột xuất
+clean %>%
+  arrange(desc(adr)) %>%
+  select(1:16) %>%
+  head(10)
+
+boxplot(clean$adr)
+```
++ Gía trị 5400 cao hơn rất nhiều so với giá trị thứ 2, có thể là lỗi nhập liệu
+
+```{r}
+# Xóa dòng adr = 5400
+clean <- clean %>% filter(adr != 5400)
+dim(clean)
+```
++ Dữ liệu còn 119,208 quan sát
+
+# 5. Tạo biến mới
+```{r}
+clean <- clean %>%
+  mutate(
+    ## Tổng số đêm lưu trú 
+    total_nights = stays_in_week_nights + stays_in_weekend_nights,
+    ## Doanh thu ước tính mỗi booking: adr x total_nights, chỉ tính cho booking không hủy
+    revenue = if_else(is_canceled == 0, adr * total_nights, 0),
+    ## Phân tổ lead_time
+    lead_group = case_when(
+      lead_time <= 30  ~ "1. 0–30 ngày",
+      lead_time <= 90  ~ "2. 31–90 ngày",
+      lead_time <= 180 ~ "3. 91–180 ngày",
+      TRUE ~ "4. 181+ ngày"),
+    ## Phân tổ khách hàng
+    guest_group = case_when(
+      adults == 1 & children == 0 & babies == 0 ~ "Solo",
+      adults == 2 & children == 0 & babies == 0 ~ "Couple",
+      children > 0 | babies > 0                 ~ "Family",
+      TRUE ~ "Group"),
+    ## Mã hóa tháng thành số thứ tự
+    month_num = match(
+      arrival_date_month,
+      c("January","February","March","April","May","June",
+        "July","August","September","October","November","December"))
+    )
+
+clean %>%
+  select(hotel, is_canceled, adr, total_nights, revenue,
+         lead_group, guest_group, month_num) %>%
+  head(10)
+```
+
+# 6. Xuất file
+```{r}
+export(clean, "hotel_bookings_clean.csv")
+```
+
+
+
