@@ -33,7 +33,7 @@ Thay 488 giá trị NULL dạng chuỗi ở biến country bằng “Unknown” 
 2. Tạo biến mới (R)
     Biến	                       Ý nghĩa
 total_nights	             Tổng số đêm lưu trú
-revenue	                   Doanh thu mỗi booking (chỉ tính booking không hủy và có ADR > 0)
+revenue	                   Doanh thu mỗi booking (chỉ tính booking không hủy)
 lead_group	               Phân tổ thời gian đặt trước thành 4 nhóm
 guest_group	               Phân loại khách theo các biến adults, children, babies
 month_num	                 Mã hóa tháng thành số thứ tự
