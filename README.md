@@ -63,12 +63,12 @@ Truy vấn phân tích theo:
       + ADR trung bình theo tháng: Biểu đồ đường (quan sát biến động theo mùa)
 
 III. Kết quả phân tích
-- Tỷ lệ hủy chung: 37.08%
+- Tỷ lệ hủy chung: 37.08%, cứ 3 booking thì gần 1 cái bị hủy.
 - City Hotel có tỷ lệ hủy cao hơn Resort Hotel (41.79% vs 27.77%)
-- Khách đặt trước hơn 180 ngày có tỷ lệ hủy cao nhất (57.01%)
+- Khách đặt trước hơn 180 ngày có tỷ lệ hủy cao nhất (57.01%), trong khi nhóm đặt trước 0-30 ngày chỉ 18.58%. Kế hoạch càng dài hạn thì xác suất thay đổi càng cao.
 - Loại cọc Non Refund có tỷ lệ hủy gần 100% trên tổng số booking theo loại cọc này.
 - Doanh thu trung bình mỗi booking: € 354.10 
 - Nhóm khách Contract có doanh thu trung bình cao nhất (€ 532.04)
 - ADR của Resort Hotel biến động mạnh theo mùa, cao điểm vào tháng 7-8.
-- Resort Hotel đạt ADR cao nhất vào tháng 7-8 (€ 183.69/ đêm), thấp nhất vào tháng 11 (€ 50.15/ đêm). Biên độ dao động gần 4 lần giữa mùa thấp và cao điểm. Resort Hotel phụ thuộc nhiều vào du lịch hè.
-- City Hotel ổn định hơn nhiều, dao động từ € 84.39/ đêm đến € 123.18/ đêm. 
+- Resort Hotel đạt ADR cao nhất vào tháng 7-8 (€ 183.69/ đêm), thấp nhất vào tháng 11 (€ 50.15/ đêm). Biên độ dao động gần 4 lần giữa mùa thấp và cao điểm. Resort Hotel phụ thuộc nhiều vào du lịch hè và dễ bị ảnh hưởng khi nhu cầu thấp điểm.
+- City Hotel ổn định hơn nhiều, dao động từ € 84.39/ đêm đến € 123.18/ đêm, nhu cầu đặt phòng tương đối ổn định và không phụ thuộc vào mùa vụ.
